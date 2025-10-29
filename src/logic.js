@@ -49,7 +49,7 @@ export async function runAgent(agent, sharedLibrary) {
   pending.push({
     id: Date.now(),
     agent: agent.cabal,
-    tweetId: null,
+    tweetId: target.id_str || target.id,
     tweetText: "ORIGINAL POST DRAFT",
     reply: text
   });
