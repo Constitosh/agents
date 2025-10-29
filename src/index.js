@@ -1,9 +1,8 @@
-import fs from "fs";
-import { runAgent } from "./logic.js";
-import { startDashboard } from "./dashboard.js";
-import { runAgent, autoFollowBack, ensureFollowingTargets } from "./logic.js";
 import dotenv from "dotenv";
 dotenv.config();
+
+import { runAgent, autoFollowBack, ensureFollowingTargets } from "./logic.js";
+import fs from "fs";
 
 
 const agents = fs.readdirSync("./agents").map(a => JSON.parse(fs.readFileSync(`./agents/${a}`)));
