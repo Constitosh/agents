@@ -14,11 +14,12 @@ export function getClient(cabal) {
 
 export async function searchTweets(client, query) {
   try {
-    const res = await client.v2.searchRecent(query, {
-      max_results: 10,
-      "tweet.fields": "author_id,text,created_at",
-      expansions: "author_id"
-    });
+    const res = await client.v2.search(query, {
+  max_results: 10,
+  "tweet.fields": "author_id,text,created_at",
+  expansions: "author_id"
+});
+
 
     if (!res.data?.length) {
       console.log(`No tweets found for query: ${query}`);
