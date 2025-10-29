@@ -26,6 +26,9 @@ export async function runAgent(agent, sharedLibrary) {
       ? agent.topics.join(" OR ")
       : "#crypto OR #web3 OR #finance";
 
+  console.log(`${agent.cabal} scanning tweets for: ${topics}`);
+
+
   const tweets = await searchTweets(client, topics);
   if (!tweets.length) return;
 
@@ -42,6 +45,9 @@ export async function runAgent(agent, sharedLibrary) {
     reply
   });
   fs.writeFileSync("./pending.json", JSON.stringify(pending, null, 2));
+
+  console.log(`${agent.cabal} queued reply for tweet: "${target.text.slice(0, 80)}..."`);
+
 
   memory.last_post_time = now;
   fs.writeFileSync(memoryPath, JSON.stringify(memory, null, 2));
