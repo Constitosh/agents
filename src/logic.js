@@ -52,17 +52,37 @@ export async function ensureFollowingTargets(agent) {
   const client = getClient(agent.cabal);
   const user = await client.v2.me();
 
+  // memory file to avoid refollowing the same users
+  const memoryPath = `./memory/${agent.cabal}.json`;
+  const memory = fs.existsSync(memoryPath)
+    ? JSON.parse(fs.readFileSync(memoryPath))
+    : { followed: [] };
+
+  let followCount = 0;
+
   for (const handle of agent.follow_targets) {
+    if (followCount >= 1) break; // only one follow per cycle
+
     const clean = handle.replace('@', '').trim();
+    if (memory.followed.includes(handle)) continue; // skip already followed
+
     try {
       const { data } = await client.v2.userByUsername(clean);
       await client.v2.follow(user.id, data.id);
       console.log(`${agent.cabal} followed ${handle}`);
+      memory.followed.push(handle);
+      followCount++;
+
+      // ⏱️ Wait 10 seconds before any next follow (safety throttle)
+      await new Promise(r => setTimeout(r, 10000));
     } catch (e) {
       console.log(`${agent.cabal} could not follow ${handle}: ${e.message}`);
     }
   }
+
+  fs.writeFileSync(memoryPath, JSON.stringify(memory, null, 2));
 }
+
 
 
 // Auto-follow-back logic
