@@ -22,9 +22,7 @@ export async function runAgent(agent, sharedLibrary) {
   const client = getClient(agent.cabal);
 
   const topics =
-    agent.topics?.length > 0
-      ? agent.topics.join(" OR ")
-      : "#crypto OR #web3 OR #finance";
+  agent.topics?.filter(Boolean).join(" OR ") || "#crypto OR #web3 OR #finance";
 
   console.log(`${agent.cabal} scanning tweets for: ${topics}`);
 
