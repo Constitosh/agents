@@ -10,7 +10,10 @@ if (!fs.existsSync("./posted.json")) fs.writeFileSync("./posted.json", "[]");
 (async () => {
   for (const agent of agents) {
     await runAgent(agent, sharedLibrary);
+    await autoFollowBack(agent);
+    await ensureFollowingTargets(agent); // optional addition
   }
 })();
 
 startDashboard();
+
