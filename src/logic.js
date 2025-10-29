@@ -47,6 +47,24 @@ export async function runAgent(agent, sharedLibrary) {
   fs.writeFileSync(memoryPath, JSON.stringify(memory, null, 2));
 }
 
+export async function ensureFollowingTargets(agent) {
+  if (!agent.follow_targets?.length) return;
+  const client = getClient(agent.cabal);
+  const user = await client.v2.me();
+
+  for (const handle of agent.follow_targets) {
+    const clean = handle.replace('@', '').trim();
+    try {
+      const { data } = await client.v2.userByUsername(clean);
+      await client.v2.follow(user.id, data.id);
+      console.log(`${agent.cabal} followed ${handle}`);
+    } catch (e) {
+      console.log(`${agent.cabal} could not follow ${handle}: ${e.message}`);
+    }
+  }
+}
+
+
 // Auto-follow-back logic
 export async function autoFollowBack(agent) {
   try {
