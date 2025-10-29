@@ -1,0 +1,158 @@
+{
+  "project": {
+    "name": "Old Money",
+    "tagline": "A premature monument to paper currency.",
+    "description": "Old Money is a satirical, narrative-driven multichain NFT project that blends art, technology, and political parody into a chaotic, evolving world of financial absurdity. Founded by Hoodro Wilson and Richard 'Trix' Trixson, it critiques inflation, corruption, and the illusion of value by transforming digital collectibles into a living, breathing economy of fuckery.",
+    "founders": [
+      "Richard Trixson (Mikael Colombu)",
+      "Hoodro Wilson"
+    ],
+    "philosophy": "OM mocks centralized power structures, fiat systems, and bureaucratic control through art and community ritual. It is both a satire and a social experiment — an inside joke disguised as a movement.",
+    "themes": [
+      "inflation and devaluation",
+      "bureaucratic absurdism",
+      "resistance through parody",
+      "economic collapse as art",
+      "community-driven chaos",
+      "hyperinflation as liberation"
+    ],
+    "tone": [
+      "dark satire",
+      "mock-government documents",
+      "ironic patriotism",
+      "paper-worshipping propaganda",
+      "underground rebellion"
+    ]
+  },
+  "timeline": {
+    "2021": "Old Money is founded by Hoodro Wilson and Richard Trixson. Conceptualized as an absurd mock-financial system within the CNFT ecosystem.",
+    "Dec 21, 2021": "The $0.2 Bill mint begins on Cardano, launching the Old Money economy and establishing its satirical monetary system.",
+    "2022": "After regulatory parody from Cheddah Gangslur and the 'Department of Just Us', Trix and Hoodro flee the USS of A to Methico. The MX Bill Collection is born, representing exile and hyperinflation.",
+    "2023": "Hoodro Wilson officially departs Old Money ('Your favorite nerd returns to the fiat mines...'). Trix continues as Over-Printer-in-Chief.",
+    "2024": "Trix expands to Bitcoin, launching TRIX Ordinals — 300 hand-crafted pieces engraved on the Motherchain, representing permanence and exile.",
+    "2025": "The OM universe grows with references to ednafo (an upcoming mint) and Brokyen (a rumored counter-forgery or rebellion project)."
+  },
+  "collections": {
+    "core": {
+      "$0.2 Bills": {
+        "summary": "Genesis collection; the first OM bills minted on Cardano — worthless yet priceless in the satire’s economy.",
+        "symbolism": "Represents fiat absurdity and the birth of Old Money’s alternate economy.",
+        "year": 2021
+      },
+      "MX Bills": {
+        "summary": "The Methican era — printed in exile. Reflects rebellion, artistic chaos, and hyperinflation.",
+        "symbolism": "Exile, resistance, rebirth under oppression.",
+        "year": 2022
+      },
+      "Back of Bills": {
+        "summary": "Reverse artworks for bills, expanding OM’s detail and symbolism.",
+        "symbolism": "Duality of value and deception of appearances."
+      },
+      "TWINS": {
+        "summary": "Dual-sided assets — the first OM collection with both front and back sides.",
+        "symbolism": "The duplicity of value and truth in financial systems."
+      },
+      "TRIX Ordinals": {
+        "summary": "The first OM expansion to Bitcoin — a limited edition of 300 Ordinals engraved permanently on the blockchain.",
+        "symbolism": "Exile to the 'Motherchain' — permanence, scarcity, artistic sovereignty.",
+        "year": 2024
+      }
+    },
+    "non_core": {
+      "The Inflation Times": {
+        "summary": "The satirical state newspaper of OM — documenting mints, scandals, and decrees.",
+        "function": "Lore anchor and official propaganda of the OM universe."
+      },
+      "Campaign Materials": {
+        "summary": "Political posters, propaganda art, and mock-election pieces.",
+        "function": "Amplifies OM’s bureaucratic satire and mock-governance aesthetic."
+      },
+      "Collector Coins": {
+        "summary": "Metallic collectibles symbolizing OM’s ongoing resistance.",
+        "function": "Physical and digital memorabilia for high-ranking collectors."
+      },
+      "FUCKs": {
+        "summary": "A cultural artifact and art series embodying OM’s philosophy: giving none and taking all.",
+        "function": "Cultural satire in collectible form."
+      },
+      "WENBOY": {
+        "summary": "A character-based side project representing degen culture.",
+        "function": "Playful cultural mirror of the crypto community."
+      },
+      "Trix Stamps": {
+        "summary": "Postage-inspired collectibles hand-signed by Trix.",
+        "function": "Bridge between digital and physical OM artifacts."
+      }
+    },
+    "future": {
+      "ednafo": {
+        "status": "upcoming",
+        "summary": "A mysterious forthcoming collection by Trix, focusing on financial elites",
+        "symbolism": "A satirical gallery of power and corruption; continuation of OM’s post-exile arc."
+      },
+      "Brokyen": {
+        "status": "rumored",
+        "summary": "An anticipated counter-forgery project, said to be influenced by the japanese bills.",
+        "symbolism": "The rebellion of value against counterfeit authority."
+      }
+    }
+  },
+  "characters": {
+    "Richard Trixson": {
+      "alias": "Mikael Colombu",
+      "role": "Over-Printer-in-Chief",
+      "description": "Visionary artist behind Old Money. Known for Jankyvision and surreal visual storytelling. Explores the illusion of monetary value through handcrafted bills and digital art."
+    },
+    "Hoodro Wilson": {
+      "role": "Co-founder, former architect of OM economy.",
+      "departure": "Left in 2023 after ensuring the 'prosperity of future generations of Mfers'.",
+      "symbolism": "Represents the pragmatic side of rebellion — the architect who left the chaos to survive the system."
+    },
+    "Cheddah Gangslur": {
+      "role": "Regulatory antagonist; symbol of authoritarian oversight.",
+      "description": "Leader of the fictional Department of Just Us; embodies corruption and systemic control."
+    }
+  },
+  "vocabulary": {
+    "terms": [
+      "Vault Breach",
+      "The Cabinet",
+      "Minting Ritual",
+      "Seedwords",
+      "Cabal Archives",
+      "The Fog",
+      "Department of Just Us",
+      "Department of Urinals",
+      "Inflation is Murder",
+      "Printer goes brrrrrrrrrr"
+    ],
+    "expressions": [
+      "Premature monument to paper currency",
+      "Economy of fuckery",
+      "Mint and be minted",
+      "GMDN"
+    ],
+    "memes": [
+      "WAGMI",
+      "NGMI",
+      "Rekt",
+      "Mfer",
+      "Paper hands",
+      "Diamond hands"
+    ]
+  },
+  "culture": {
+    "events": {
+      "Ruggenheim Exhibit": "Exhibition of degraded bills, 1/1 Trix artworks, and physical OM pieces at the DC Arts Center.",
+      "Mfer Meetup": "Annual gathering of OM holders and Cabinet members, celebrating community-driven chaos.",
+      "Paris Print Shop": "Trix’s atelier for limited, wax-stamped, and physically degraded prints of OM works."
+    },
+    "community": "The Discord is OM’s central hub — a chaotic republic of degens, artists, and philosophers. Members identify as Mfers and operate under loose anarchy, guided by lore drops, memes, and secret events."
+  },
+  "sources": [
+    "https://www.oldmoney.io",
+    "https://www.oldmoney.io/archive",
+    "https://magiceden.io/ordinals/marketplace/trix"
+  ],
+  "last_updated_utc": "2025-10-29T10:56:25.614599Z"
+}
