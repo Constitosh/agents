@@ -40,16 +40,24 @@ export async function runAgent(agent, sharedLibrary) {
     tweets = await getFollowingTweets(client, 10);
   }
 
-  // 🧩 fallback 2: post original tweet if none found & daily limit not reached
-  if (!tweets.length && memory.daily_posts < 4) {
-    const context = getTrendingTopics();
-    const text = await generateTweet(agent, `${sharedLibrary}. Recent topics: ${context}`);
-    await postTweet(client, text);
-    memory.daily_posts += 1;
-    fs.writeFileSync(memoryPath, JSON.stringify(memory, null, 2));
-    console.log(`${agent.cabal} posted original tweet (${memory.daily_posts}/4 today).`);
-    return;
-  }
+  if (!tweets.length) {
+  const context = getTrendingTopics();
+  const text = await generateTweet(agent, `${sharedLibrary}. Recent topics: ${context}`);
+
+  // if over limit, still queue for manual approval instead of posting directly
+  const pending = JSON.parse(fs.readFileSync("./pending.json"));
+  pending.push({
+    id: Date.now(),
+    agent: agent.cabal,
+    tweetId: null,
+    tweetText: "ORIGINAL POST DRAFT",
+    reply: text
+  });
+  fs.writeFileSync("./pending.json", JSON.stringify(pending, null, 2));
+
+  console.log(`${agent.cabal} queued an original draft for approval.`);
+  return;
+}
 
   if (!tweets.length) {
     console.log(`${agent.cabal} skipped — nothing to reply to and post limit reached.`);
