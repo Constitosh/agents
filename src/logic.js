@@ -1,35 +1,62 @@
+// src/logic.js
 import fs from "fs";
 import {
   getClient,
   searchTweets,
+  getFollowingTweets,
   replyToTweet,
   postTweet,
-  followUser
+  followUser,
+  getTrendingTopics
 } from "./twitter.js";
 import { generateReply, generateTweet } from "./openai.js";
 
-// Run one cabal’s logic
+// Run one cabal’s full logic cycle
 export async function runAgent(agent, sharedLibrary) {
   const memoryPath = `./memory/${agent.cabal}.json`;
   const memory = fs.existsSync(memoryPath)
     ? JSON.parse(fs.readFileSync(memoryPath))
-    : { last_post_time: 0, followed: [] };
+    : { last_post_time: 0, followed: [], daily_posts: 0, last_reset: 0 };
 
   const now = Date.now();
-  const rhythm = 4 * 60 * 60 * 1000; // every 4h default
-  if (now - memory.last_post_time < rhythm) return; // too soon
+
+  // Reset daily post counter every 24h
+  if (now - memory.last_reset > 24 * 60 * 60 * 1000) {
+    memory.daily_posts = 0;
+    memory.last_reset = now;
+  }
 
   const client = getClient(agent.cabal);
-
   const topics =
-  agent.topics?.filter(Boolean).join(" OR ") || "#crypto OR #web3 OR #finance";
+    agent.topics?.filter(Boolean).join(" OR ") || "#crypto OR #web3 OR #finance";
 
   console.log(`${agent.cabal} scanning tweets for: ${topics}`);
 
+  let tweets = await searchTweets(client, topics);
 
-  const tweets = await searchTweets(client, topics);
-  if (!tweets.length) return;
+  // 🧩 fallback 1: try following feed
+  if (!tweets.length) {
+    console.log(`${agent.cabal} found nothing with hashtags — checking followings...`);
+    tweets = await getFollowingTweets(client, 10);
+  }
 
+  // 🧩 fallback 2: post original tweet if none found & daily limit not reached
+  if (!tweets.length && memory.daily_posts < 4) {
+    const context = getTrendingTopics();
+    const text = await generateTweet(agent, `${sharedLibrary}. Recent topics: ${context}`);
+    await postTweet(client, text);
+    memory.daily_posts += 1;
+    fs.writeFileSync(memoryPath, JSON.stringify(memory, null, 2));
+    console.log(`${agent.cabal} posted original tweet (${memory.daily_posts}/4 today).`);
+    return;
+  }
+
+  if (!tweets.length) {
+    console.log(`${agent.cabal} skipped — nothing to reply to and post limit reached.`);
+    return;
+  }
+
+  // 🗣️ Generate and queue reply
   const target = tweets[Math.floor(Math.random() * tweets.length)];
   const reply = await generateReply(agent, target.text, sharedLibrary);
   if (!reply) return;
@@ -46,17 +73,17 @@ export async function runAgent(agent, sharedLibrary) {
 
   console.log(`${agent.cabal} queued reply for tweet: "${target.text.slice(0, 80)}..."`);
 
-
+  // ✅ update memory
   memory.last_post_time = now;
   fs.writeFileSync(memoryPath, JSON.stringify(memory, null, 2));
 }
 
+// follow-target and follow-back logic unchanged
 export async function ensureFollowingTargets(agent) {
   if (!agent.follow_targets?.length) return;
   const client = getClient(agent.cabal);
   const user = await client.v2.me();
 
-  // memory file to avoid refollowing the same users
   const memoryPath = `./memory/${agent.cabal}.json`;
   const memory = fs.existsSync(memoryPath)
     ? JSON.parse(fs.readFileSync(memoryPath))
@@ -66,9 +93,8 @@ export async function ensureFollowingTargets(agent) {
 
   for (const handle of agent.follow_targets) {
     if (followCount >= 1) break; // only one follow per cycle
-
-    const clean = handle.replace('@', '').trim();
-    if (memory.followed.includes(handle)) continue; // skip already followed
+    const clean = handle.replace("@", "").trim();
+    if (memory.followed.includes(handle)) continue;
 
     try {
       const { data } = await client.v2.userByUsername(clean);
@@ -76,9 +102,7 @@ export async function ensureFollowingTargets(agent) {
       console.log(`${agent.cabal} followed ${handle}`);
       memory.followed.push(handle);
       followCount++;
-
-      // ⏱️ Wait 10 seconds before any next follow (safety throttle)
-      await new Promise(r => setTimeout(r, 10000));
+      await new Promise((r) => setTimeout(r, 10000));
     } catch (e) {
       console.log(`${agent.cabal} could not follow ${handle}: ${e.message}`);
     }
@@ -87,9 +111,6 @@ export async function ensureFollowingTargets(agent) {
   fs.writeFileSync(memoryPath, JSON.stringify(memory, null, 2));
 }
 
-
-
-// Auto-follow-back logic
 export async function autoFollowBack(agent) {
   try {
     const client = getClient(agent.cabal);
@@ -109,6 +130,7 @@ export async function autoFollowBack(agent) {
         memory.followed.push(author);
       }
     }
+
     fs.writeFileSync(memoryPath, JSON.stringify(memory, null, 2));
   } catch (err) {
     console.error(`Follow-back error for ${agent.cabal}:`, err.message);
