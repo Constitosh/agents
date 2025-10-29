@@ -1,54 +1,74 @@
 import fs from "fs";
-import { getClient, searchTweets, replyToTweet, postTweet, likeTweet, followUser } from "./twitter.js";
+import {
+  getClient,
+  searchTweets,
+  replyToTweet,
+  postTweet,
+  followUser
+} from "./twitter.js";
 import { generateReply, generateTweet } from "./openai.js";
 
+// Run one cabal’s logic
 export async function runAgent(agent, sharedLibrary) {
   const memoryPath = `./memory/${agent.cabal}.json`;
-  const memory = fs.existsSync(memoryPath) ? JSON.parse(fs.readFileSync(memoryPath)) : { last_post_time: 0 };
-  const now = Date.now();
-  const rhythm = 4 * 60 * 60 * 1000; // every 4 hours
+  const memory = fs.existsSync(memoryPath)
+    ? JSON.parse(fs.readFileSync(memoryPath))
+    : { last_post_time: 0, followed: [] };
 
-  if (now - memory.last_post_time < rhythm) return;
+  const now = Date.now();
+  const rhythm = 4 * 60 * 60 * 1000; // every 4h default
+  if (now - memory.last_post_time < rhythm) return; // too soon
 
   const client = getClient(agent.cabal);
-  const topics = agent.topics?.join(" OR ") || "#crypto";
-  const tweets = await searchTweets(client, topics);
-  const target = tweets[Math.floor(Math.random() * tweets.length)];
-  if (!target) return;
 
+  const topics =
+    agent.topics?.length > 0
+      ? agent.topics.join(" OR ")
+      : "#crypto OR #web3 OR #finance";
+
+  const tweets = await searchTweets(client, topics);
+  if (!tweets.length) return;
+
+  const target = tweets[Math.floor(Math.random() * tweets.length)];
   const reply = await generateReply(agent, target.text, sharedLibrary);
-  const pending = JSON.parse(fs.readFileSync("./pending.json", "utf8"));
-  pending.push({ id: Date.now(), agent: agent.cabal, tweetId: target.id, tweetText: target.text, reply });
+  if (!reply) return;
+
+  const pending = JSON.parse(fs.readFileSync("./pending.json"));
+  pending.push({
+    id: Date.now(),
+    agent: agent.cabal,
+    tweetId: target.id,
+    tweetText: target.text,
+    reply
+  });
   fs.writeFileSync("./pending.json", JSON.stringify(pending, null, 2));
 
   memory.last_post_time = now;
   fs.writeFileSync(memoryPath, JSON.stringify(memory, null, 2));
 }
 
-// Automatically follow back users who like agent's tweets
+// Auto-follow-back logic
 export async function autoFollowBack(agent) {
-  const client = getClient(agent.cabal);
-  const user = await client.v2.me();
-  const likes = await client.v2.userLikedTweets(user.data.id, { max_results: 10 });
-  const memoryPath = `./memory/${agent.cabal}.json`;
-  const memory = fs.existsSync(memoryPath)
-    ? JSON.parse(fs.readFileSync(memoryPath))
-    : { followed: [] };
+  try {
+    const client = getClient(agent.cabal);
+    const user = await client.v2.me();
+    const liked = await client.v2.userLikedTweets(user.data.id, { max_results: 20 });
+    if (!liked.data?.length) return;
 
-  for (const like of likes.data || []) {
-    const likerId = like.author_id;
-    if (!memory.followed.includes(likerId)) {
-      await client.v2.follow(likerId);
-      memory.followed.push(likerId);
+    const memoryPath = `./memory/${agent.cabal}.json`;
+    const memory = fs.existsSync(memoryPath)
+      ? JSON.parse(fs.readFileSync(memoryPath))
+      : { followed: [] };
+
+    for (const tweet of liked.data) {
+      const author = tweet.author_id;
+      if (author && !memory.followed.includes(author)) {
+        await followUser(client, author);
+        memory.followed.push(author);
+      }
     }
-  }
-  fs.writeFileSync(memoryPath, JSON.stringify(memory, null, 2));
-}
-
-
-// auto-follow-back logic
-export async function autoFollowBack(client, likes) {
-  for (const like of likes) {
-    await followUser(client, like.user_id);
+    fs.writeFileSync(memoryPath, JSON.stringify(memory, null, 2));
+  } catch (err) {
+    console.error(`Follow-back error for ${agent.cabal}:`, err.message);
   }
 }
