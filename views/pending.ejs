@@ -1,0 +1,15 @@
+<h2>Pending Posts</h2>
+<table border="1" cellpadding="5">
+<tr><th>Agent</th><th>Tweet</th><th>Reply</th><th>Actions</th></tr>
+<% pending.forEach(p => { %>
+<tr>
+<td><%= p.agent %></td>
+<td><a href="https://x.com/i/status/<%= p.tweetId %>" target="_blank"><%= p.tweetText %></a></td>
+<td><%= p.reply %></td>
+<td>
+<form action="/approve/<%= p.id %>" method="POST"><button>✅</button></form>
+<form action="/deny/<%= p.id %>" method="POST"><button>❌</button></form>
+</td>
+</tr>
+<% }) %>
+</table>
