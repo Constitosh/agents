@@ -1,20 +1,14 @@
 import dotenv from "dotenv";
 dotenv.config();
 
-import OpenAI from "openai";
+import fs from "fs";
+import { runAgent, autoFollowBack, ensureFollowingTargets } from "./src/logic.js";
 
-const client = new OpenAI({
-  apiKey: process.env.OPENAI_KEY
-});
+const whale = JSON.parse(fs.readFileSync("./agents/whale_agent_profile.json"));
+const shared = JSON.parse(fs.readFileSync("./shared/library.json"));
 
-try {
-  const response = await client.chat.completions.create({
-    model: "gpt-4o-mini",
-    messages: [{ role: "user", content: "Say hello" }]
-  });
-
-  console.log("✅ OpenAI connection OK:");
-  console.log(response.choices[0].message.content);
-} catch (error) {
-  console.error("❌ OpenAI error:", error.message);
-}
+console.log("Running Whale manually...");
+await ensureFollowingTargets(whale);
+await runAgent(whale, shared);
+await autoFollowBack(whale);
+console.log("✅ Manual Whale cycle complete");
