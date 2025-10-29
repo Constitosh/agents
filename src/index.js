@@ -3,7 +3,7 @@ dotenv.config();
 
 import fs from "fs";
 import { runAgent, autoFollowBack, ensureFollowingTargets } from "./logic.js";
-import { startDashboard } from "./dashboard.js";   // ✅ ADD THIS LINE
+import { startDashboard } from "./dashboard.js";
 
 // Load all cabal agents
 const agents = fs.readdirSync("./agents").map(a =>
@@ -19,17 +19,29 @@ if (!fs.existsSync("./posted.json")) fs.writeFileSync("./posted.json", "[]");
 
 // 🧠 Run agent logic asynchronously in background
 (async () => {
-  for (const agent of agents) {
+  console.log(`🚀 Starting ${agents.length} AI agents with 15-minute stagger...`);
+
+  for (let i = 0; i < agents.length; i++) {
+    const agent = agents[i];
     try {
+      console.log(`\n🔹 Running agent [${agent.cabal.toUpperCase()}] (${i + 1}/${agents.length})`);
       await runAgent(agent, sharedLibrary);
-      // Comment out next two lines temporarily to avoid 429 spam
+
+      // 💤 Wait 15 minutes before next agent to avoid API rate-limit
+      const delayMs = 15 * 60 * 1000;
+      console.log(`⏱️ Waiting ${delayMs / 60000} min before next agent...`);
+      await new Promise(r => setTimeout(r, delayMs));
+
+      // (Optional) enable these later if needed
       // await autoFollowBack(agent);
       // await ensureFollowingTargets(agent);
     } catch (err) {
-      console.error(`Error running ${agent.cabal}:`, err.message);
+      console.error(`❌ Error running ${agent.cabal}:`, err.message);
     }
   }
+
+  console.log("\n✅ All agents finished one full 2-hour cycle.");
 })();
 
-// 🖥️ Start the web dashboard (approvals)
-startDashboard();   // ✅ Safe and defined now
+// 🖥️ Keep the dashboard live
+startDashboard();
