@@ -25,6 +25,27 @@ export async function runAgent(agent, sharedLibrary) {
   fs.writeFileSync(memoryPath, JSON.stringify(memory, null, 2));
 }
 
+// Automatically follow back users who like agent's tweets
+export async function autoFollowBack(agent) {
+  const client = getClient(agent.cabal);
+  const user = await client.v2.me();
+  const likes = await client.v2.userLikedTweets(user.data.id, { max_results: 10 });
+  const memoryPath = `./memory/${agent.cabal}.json`;
+  const memory = fs.existsSync(memoryPath)
+    ? JSON.parse(fs.readFileSync(memoryPath))
+    : { followed: [] };
+
+  for (const like of likes.data || []) {
+    const likerId = like.author_id;
+    if (!memory.followed.includes(likerId)) {
+      await client.v2.follow(likerId);
+      memory.followed.push(likerId);
+    }
+  }
+  fs.writeFileSync(memoryPath, JSON.stringify(memory, null, 2));
+}
+
+
 // auto-follow-back logic
 export async function autoFollowBack(client, likes) {
   for (const like of likes) {
