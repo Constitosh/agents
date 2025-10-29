@@ -58,6 +58,26 @@ app.post("/deny/:id", (req, res) => {
   res.redirect("/pending");
 });
 
+// SETTINGS PAGE
+app.get("/settings", (req, res) => {
+  if (!authed) return res.redirect("/login");
+  const agents = fs.readdirSync("./agents").map(f =>
+    JSON.parse(fs.readFileSync(`./agents/${f}`))
+  );
+  res.render("settings", { agents });
+});
+
+app.post("/settings/:cabal", (req, res) => {
+  const cabal = req.params.cabal;
+  const file = `./agents/${cabal}_agent_profile.json`;
+  const data = JSON.parse(fs.readFileSync(file));
+  data.topics = req.body.topics.split(",").map(s => s.trim());
+  data.follow_targets = req.body.follow_targets.split(",").map(s => s.trim());
+  fs.writeFileSync(file, JSON.stringify(data, null, 2));
+  res.redirect("/settings");
+});
+
+
 export function startDashboard() {
   app.listen(process.env.PORT, () => console.log(`Dashboard running on ${process.env.PORT}`));
 }
