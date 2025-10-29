@@ -13,8 +13,24 @@ export function getClient(cabal) {
 }
 
 export async function searchTweets(client, query) {
-  const res = await client.v2.search(query, { max_results: 10 });
-  return res.data || [];
+  try {
+    const res = await client.v2.searchRecent(query, {
+      max_results: 10,
+      "tweet.fields": "author_id,text,created_at",
+      expansions: "author_id"
+    });
+
+    if (!res.data?.length) {
+      console.log(`No tweets found for query: ${query}`);
+      return [];
+    }
+
+    console.log(`Found ${res.data.length} tweets for query: ${query}`);
+    return res.data;
+  } catch (err) {
+    console.error("❌ searchTweets error:", err.message);
+    return [];
+  }
 }
 
 export async function replyToTweet(client, tweetId, text) {
@@ -25,10 +41,22 @@ export async function postTweet(client, text) {
   return await client.v2.tweet(text);
 }
 
-export async function likeTweet(client, tweetId) {
-  try { await client.v2.like(tweetId); } catch (e) { }
+export async function followUser(client, targetUserId) {
+  try {
+    const me = await client.v2.me();
+    await client.v2.follow(me.data.id, targetUserId);
+    console.log(`Followed user ${targetUserId}`);
+  } catch (e) {
+    console.error(`Follow error: ${e.message}`);
+  }
 }
 
-export async function followUser(client, userId) {
-  try { await client.v2.follow(userId); } catch (e) { }
+export async function likeTweet(client, tweetId) {
+  try {
+    const me = await client.v2.me();
+    await client.v2.like(me.data.id, tweetId);
+    console.log(`Liked tweet ${tweetId}`);
+  } catch (e) {
+    console.error(`Like error: ${e.message}`);
+  }
 }
