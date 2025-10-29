@@ -1,6 +1,8 @@
 import fs from "fs";
 import { runAgent } from "./logic.js";
 import { startDashboard } from "./dashboard.js";
+import { runAgent, autoFollowBack, ensureFollowingTargets } from "./logic.js";
+
 
 const agents = fs.readdirSync("./agents").map(a => JSON.parse(fs.readFileSync(`./agents/${a}`)));
 const sharedLibrary = JSON.parse(fs.readFileSync("./shared/library.json"));
