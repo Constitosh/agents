@@ -5,8 +5,8 @@
 <tr>
 <td><%= p.agent %></td>
 <td>
-  <% if (item.tweetUrl) { %>
-    <a href="<%= item.tweetUrl %>" target="_blank">View Tweet</a>
+  <% if (p.tweetUrl) { %>
+    <a href="<%= p.tweetUrl %>" target="_blank">View Tweet</a>
   <% } else { %>
     <span style="opacity:.6">Original draft</span>
   <% } %>
