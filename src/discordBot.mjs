@@ -17,7 +17,6 @@ import {
 import fs from "fs";
 import { getClient, replyToTweet, postTweet } from "./twitter.js";
 import { generateReply } from "./openai.js";
- import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from "discord.js"; // ⬅️ add at top of file with other imports
 
 
 const TOKEN = process.env.DISCORD_BOT_TOKEN;
