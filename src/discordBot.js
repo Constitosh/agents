@@ -88,15 +88,70 @@ client.on("interactionCreate", async (interaction) => {
     // Notify in Discord
     await notifyDiscord(item);
 
-    await interaction.followUp({
-      content: `✅ Reply queued for *${cabal.toUpperCase()}*:\n\n> ${reply}\n\n[Open Dashboard](https://agents.thefakerug.com/pending)`,
-      ephemeral: true
-    });
+ import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from "discord.js"; // ⬅️ add at top of file with other imports
+
+// ...
+// After await notifyDiscord(item);
+
+const row = new ActionRowBuilder().addComponents(
+  new ButtonBuilder()
+    .setCustomId(`approve_${item.id}`)
+    .setLabel("✅ Approve")
+    .setStyle(ButtonStyle.Success),
+  new ButtonBuilder()
+    .setCustomId(`deny_${item.id}`)
+    .setLabel("❌ Deny")
+    .setStyle(ButtonStyle.Danger)
+);
+
+await interaction.followUp({
+  content: `🧠 *${cabal.toUpperCase()}* draft ready:\n> ${reply}\n\n🔗 [View Tweet](${url})`,
+  components: [row]
+});
+
   }
 });
 
 client.once("ready", () => {
   console.log(`🤖 Discord bot logged in as ${client.user.tag}`);
 });
+
+// Handle Approve/Deny button clicks
+client.on("interactionCreate", async (i) => {
+  if (!i.isButton()) return;
+
+  const [action, idStr] = i.customId.split("_");
+  const id = Number(idStr);
+
+  const pending = JSON.parse(fs.readFileSync("./pending.json"));
+  const item = pending.find(p => p.id === id);
+
+  if (!item) return i.reply({ content: "Item not found.", ephemeral: true });
+
+  if (action === "approve") {
+    const { getClient, replyToTweet, postTweet } = await import("./twitter.js");
+    const agent = JSON.parse(fs.readFileSync(`./agents/${item.agent}_agent_profile.json`));
+    const clientTw = getClient(agent.cabal);
+
+    if (item.tweetId && item.tweetId !== "ORIGINAL") {
+      await replyToTweet(clientTw, item.tweetId, item.reply);
+    } else {
+      await postTweet(clientTw, item.reply);
+    }
+
+    const posted = JSON.parse(fs.readFileSync("./posted.json"));
+    posted.push(item);
+    fs.writeFileSync("./posted.json", JSON.stringify(posted, null, 2));
+    fs.writeFileSync("./pending.json", JSON.stringify(pending.filter(p => p.id !== id), null, 2));
+
+    await i.reply({ content: `✅ Approved and posted by ${item.agent.toUpperCase()}`, ephemeral: true });
+  }
+
+  if (action === "deny") {
+    fs.writeFileSync("./pending.json", JSON.stringify(pending.filter(p => p.id !== id), null, 2));
+    await i.reply({ content: `❌ Denied and removed from queue.`, ephemeral: true });
+  }
+});
+
 
 client.login(TOKEN);
