@@ -25,7 +25,7 @@ ${JSON.stringify(sharedLibrary, null, 2)}
 Tweet to respond to:
 "${tweetText}"
 
-Task: Write a witty, sarcastic reply that sounds human, with subtle character traits of the cabal.
+Task: Write a witty, sarcastic reply (under 180 chars) that sounds human, with subtle character traits of the cabal.
 `;
 
   const res = await openai.responses.create({
@@ -44,7 +44,7 @@ ${BASE_STYLE}
 Shared Old Money knowledge:
 ${JSON.stringify(sharedLibrary, null, 2)}
 
-Task: Write a standalone tweet (under 220 chars) that sounds sarcastic, confident, and human.
+Task: Write a standalone tweet (under 200 chars) that sounds sarcastic, confident, and human.
 `;
 
   const res = await openai.responses.create({
