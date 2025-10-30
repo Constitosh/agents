@@ -10,6 +10,8 @@ import {
   getTrendingTopics,
 } from "./twitter.js";
 import { generateReply, generateTweet } from "./openai.js";
+import { notifyDiscord } from "./notifyDiscord.js";
+
 
 /**
  * Run one cabal’s full logic cycle
@@ -58,6 +60,7 @@ export async function runAgent(agent, sharedLibrary) {
     });
     fs.writeFileSync("./pending.json", JSON.stringify(pending, null, 2));
     console.log(`${agent.cabal} queued an original draft for approval.`);
+    await notifyDiscord(pending[pending.length - 1]);
     return;
   }
 
@@ -85,7 +88,7 @@ export async function runAgent(agent, sharedLibrary) {
     reply,
   });
   fs.writeFileSync("./pending.json", JSON.stringify(pending, null, 2));
-
+  await notifyDiscord(pending[pending.length - 1]);
   console.log(`${agent.cabal} queued reply for tweet: "${(target.text || "").slice(0, 80)}..."`);
 
   memory.last_post_time = now;
