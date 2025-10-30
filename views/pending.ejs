@@ -4,7 +4,14 @@
 <% pending.forEach(p => { %>
 <tr>
 <td><%= p.agent %></td>
-<td><a href="https://x.com/i/status/<%= p.tweetId %>" target="_blank"><%= p.tweetText %></a></td>
+<td>
+  <% if (item.tweetUrl) { %>
+    <a href="<%= item.tweetUrl %>" target="_blank">View Tweet</a>
+  <% } else { %>
+    <span style="opacity:.6">Original draft</span>
+  <% } %>
+</td>
+
 <td><%= p.reply %></td>
 <td>
 <form action="/approve/<%= p.id %>" method="POST"><button>✅</button></form>
