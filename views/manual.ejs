@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Manual Reply</title>
+  <style>
+    body { font-family: sans-serif; background:#0b0b0b; color:#ddd; padding:2rem; }
+    input, select { width: 100%; padding: .6rem; margin:.6rem 0; }
+    button { padding:.7rem 1.5rem; background:#00b894; color:white; border:0; cursor:pointer; }
+    a { color:#999; }
+  </style>
+</head>
+<body>
+  <h2>Compose Manual Reply</h2>
+  <form method="post" action="/manual">
+    <label>Tweet URL</label>
+    <input type="text" name="tweetUrl" placeholder="https://x.com/user/status/1234567890" required />
+
+    <label>Select Cabal</label>
+    <select name="cabal" required>
+      <% agents.forEach(a => { %>
+        <option value="<%= a %>"><%= a.toUpperCase() %></option>
+      <% }) %>
+    </select>
+
+    <button type="submit">Generate Draft</button>
+  </form>
+  <p><a href="/pending">← Back to Pending</a></p>
+</body>
+</html>
