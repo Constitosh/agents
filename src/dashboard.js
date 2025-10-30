@@ -3,6 +3,8 @@ import bodyParser from "body-parser";
 import fs from "fs";
 import crypto from "crypto";
 import { getClient, replyToTweet } from "./twitter.js";
+import { notifyDiscord } from "./notifyDiscord.js";
+
 
 const app = express();
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -123,11 +125,14 @@ app.post("/manual", async (req, res) => {
     tweetText: "MANUAL REPLY REQUEST",
     reply
   });
-  fs.writeFileSync("./pending.json", JSON.stringify(pending, null, 2));
+fs.writeFileSync("./pending.json", JSON.stringify(pending, null, 2));
 
-  console.log(`📝 Manual reply for ${cabal} queued for ${tweetUrl}`);
-  res.redirect("/pending");
-});
+// ✅ Send Discord notification
+await notifyDiscord(pending[pending.length - 1]);
+
+console.log(`🧠 Manual reply for ${cabal} queued & sent to Discord for ${tweetUrl}`);
+res.redirect("/pending");
+
 
 
 // =============== SETTINGS PAGE ===============
