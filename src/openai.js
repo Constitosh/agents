@@ -28,11 +28,20 @@ Tweet to respond to:
 Task: Write a witty, sarcastic reply (under 180 chars) that sounds human, with subtle character traits of the cabal.
 `;
 
-  const res = await openai.responses.create({
-    model: "gpt-5",
-    input: prompt
-  });
-  return res.output_text?.trim();
+const res = await openai.responses.create({
+  model: "gpt-5",
+  input: prompt
+});
+
+// ✅ Normalize different response formats
+let text =
+  res.output_text ||
+  res.output?.[0]?.content?.[0]?.text ||
+  res.output?.[0]?.content ||
+  "";
+
+return String(text).trim();
+
 }
 
 export async function generateTweet(agent, sharedLibrary) {
@@ -47,9 +56,18 @@ ${JSON.stringify(sharedLibrary, null, 2)}
 Task: Write a standalone tweet (under 200 chars) that sounds sarcastic, confident, and human.
 `;
 
-  const res = await openai.responses.create({
-    model: "gpt-5",
-    input: prompt
-  });
-  return res.output_text?.trim();
+const res = await openai.responses.create({
+  model: "gpt-5",
+  input: prompt
+});
+
+// ✅ Normalize different response formats
+let text =
+  res.output_text ||
+  res.output?.[0]?.content?.[0]?.text ||
+  res.output?.[0]?.content ||
+  "";
+
+return String(text).trim();
+
 }
