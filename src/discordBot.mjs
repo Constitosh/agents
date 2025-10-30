@@ -56,8 +56,15 @@ const CLIENT_ID = process.env.DISCORD_CLIENT_ID;
 
 (async () => {
   try {
-    await rest.put(Routes.applicationCommands(CLIENT_ID), { body: commands });
-    console.log("✅ Registered /tweet command globally");
+const GUILD_ID = process.env.DISCORD_GUILD_ID;
+if (GUILD_ID) {
+  await rest.put(Routes.applicationGuildCommands(CLIENT_ID, GUILD_ID), { body: commands });
+  console.log(`✅ Registered /tweet in guild ${GUILD_ID}`);
+} else {
+  await rest.put(Routes.applicationCommands(CLIENT_ID), { body: commands });
+  console.log("✅ Registered /tweet command globally (may take ~1 hour to appear)");
+}
+
   } catch (err) {
     console.error("❌ Failed to register command:", err);
   }
@@ -97,11 +104,6 @@ client.on("interactionCreate", async (interaction) => {
     pending.push(item);
     fs.writeFileSync("./pending.json", JSON.stringify(pending, null, 2));
 
-    // Notify in Discord
-    await notifyDiscord(item);
-
-// ...
-// After await notifyDiscord(item);
 
 const row = new ActionRowBuilder().addComponents(
   new ButtonBuilder()
@@ -166,6 +168,8 @@ client.on("interactionCreate", async (i) => {
     await i.reply({ content: `❌ Denied and removed from queue.`, ephemeral: true });
   }
 });
+client.on("error", console.error);
+client.on("warn", console.warn);
 
 
 client.login(TOKEN);
