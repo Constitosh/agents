@@ -18,11 +18,6 @@ export async function runAgent(agent, sharedLibrary) {
   const memoryPath = `./memory/${agent.cabal}.json`;
   const memory = fs.existsSync(memoryPath)
     ? JSON.parse(fs.readFileSync(memoryPath))
-
-export async function runAgent(agent, sharedLibrary) {
-  const memoryPath = `./memory/${agent.cabal}.json`;
-  const memory = fs.existsSync(memoryPath)
-    ? JSON.parse(fs.readFileSync(memoryPath))
     : { last_post_time: 0, followed: [], daily_posts: 0, last_reset: 0 };
 
   const now = Date.now();
