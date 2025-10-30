@@ -18,11 +18,16 @@ export async function runAgent(agent, sharedLibrary) {
   const memoryPath = `./memory/${agent.cabal}.json`;
   const memory = fs.existsSync(memoryPath)
     ? JSON.parse(fs.readFileSync(memoryPath))
+
+export async function runAgent(agent, sharedLibrary) {
+  const memoryPath = `./memory/${agent.cabal}.json`;
+  const memory = fs.existsSync(memoryPath)
+    ? JSON.parse(fs.readFileSync(memoryPath))
     : { last_post_time: 0, followed: [], daily_posts: 0, last_reset: 0 };
 
   const now = Date.now();
 
-  // reset daily post counter every 24 h
+  // Reset daily post counter every 24h
   if (now - memory.last_reset > 24 * 60 * 60 * 1000) {
     memory.daily_posts = 0;
     memory.last_reset = now;
@@ -30,102 +35,63 @@ export async function runAgent(agent, sharedLibrary) {
 
   const client = getClient(agent.cabal);
   const topics =
-    agent.topics?.filter(Boolean).join(" OR ") ||
-    "#crypto OR #web3 OR #finance";
+    agent.topics?.filter(Boolean).join(" OR ") || "#crypto OR #web3 OR #finance";
 
   console.log(`${agent.cabal} scanning tweets for: ${topics}`);
 
-  let tweets = [];
-  try {
-    tweets = await searchTweets(client, topics);
-  } catch (e) {
-    if (String(e.message).includes("429")) {
-      console.warn(`⚠️ ${agent.cabal} rate-limited on search — waiting 60 s`);
-      await new Promise((r) => setTimeout(r, 60_000));
-      return;
-    }
-    console.error(`❌ searchTweets failed for ${agent.cabal}:`, e.message);
-    return;
+  // ---- merge hashtag search + followings feed ----
+  let tweets = await searchTweets(client, topics);
+
+  if (!tweets.length || Math.random() < 0.5) {
+    console.log(`${agent.cabal} scanning followings for conversation targets...`);
+    const followTweets = await getFollowingTweets(client, 10);
+    if (followTweets?.length) tweets = [...tweets, ...followTweets];
   }
 
-  // fallback 1 — following feed
-  if (!tweets.length) {
-    console.log(
-      `${agent.cabal} found nothing with hashtags — checking followings...`
-    );
-    try {
-      tweets = await getFollowingTweets(client, 10);
-    } catch (e) {
-      if (String(e.message).includes("429")) {
-        console.warn(
-          `⚠️ ${agent.cabal} rate-limited on followings — waiting 60 s`
-        );
-        await new Promise((r) => setTimeout(r, 60_000));
-      } else {
-        console.error(
-          `❌ getFollowingTweets failed for ${agent.cabal}:`,
-          e.message
-        );
-      }
-      return;
-    }
-  }
-
-  // fallback 2 — create an original draft if nothing to reply to
+  // ---- if nothing found, queue an original draft ----
   if (!tweets.length) {
     const context = getTrendingTopics();
-    const text = await generateTweet(
-      agent,
-      `${sharedLibrary}. Recent topics: ${context}`
-    );
-
+    const text = await generateTweet(agent, { sharedLibrary, context });
     const pending = JSON.parse(fs.readFileSync("./pending.json"));
     pending.push({
       id: Date.now(),
       agent: agent.cabal,
       tweetId: "ORIGINAL",
+      tweetUrl: null,
       tweetText: "ORIGINAL POST DRAFT",
-      reply: text,
+      reply: text
     });
     fs.writeFileSync("./pending.json", JSON.stringify(pending, null, 2));
-
     console.log(`${agent.cabal} queued an original draft for approval.`);
     return;
   }
 
-  // choose a target tweet safely
-  let target = null;
-  if (tweets.length) {
-    target = tweets[Math.floor(Math.random() * tweets.length)];
-  }
-  if (!target || !target.text) {
-    console.log(`${agent.cabal} skipped — no valid target tweet found.`);
+  // ---- safe target selection ----
+  let target = tweets[Math.floor(Math.random() * tweets.length)];
+  if (!target) {
+    console.log(`${agent.cabal} skipped — target vanished after filtering.`);
     return;
   }
 
-  // generate reply
-  const reply = await generateReply(agent, target.text, sharedLibrary);
-  if (!reply) {
-    console.log(`${agent.cabal} skipped — no reply generated.`);
-    return;
-  }
+  const tid = target.id_str || target.id || null;
+  const turl = tid ? `https://x.com/i/web/status/${tid}` : null;
 
-  // queue reply for manual approval
+  const reply = await generateReply(agent, target.text || "", sharedLibrary);
+  if (!reply) return;
+
   const pending = JSON.parse(fs.readFileSync("./pending.json"));
   pending.push({
     id: Date.now(),
     agent: agent.cabal,
-    tweetId: target.id_str || target.id,
-    tweetText: target.text,
-    reply,
+    tweetId: tid || "ORIGINAL",
+    tweetUrl: turl,
+    tweetText: (target.text || "").slice(0, 280),
+    reply
   });
   fs.writeFileSync("./pending.json", JSON.stringify(pending, null, 2));
 
-  console.log(
-    `${agent.cabal} queued reply for tweet: "${target.text.slice(0, 80)}..."`
-  );
+  console.log(`${agent.cabal} queued reply for tweet: "${(target.text || "").slice(0, 80)}..."`);
 
-  // update memory
   memory.last_post_time = now;
   fs.writeFileSync(memoryPath, JSON.stringify(memory, null, 2));
 }
