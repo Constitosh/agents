@@ -125,6 +125,10 @@ await interaction.followUp({
 client.once("ready", () => {
   console.log(`🤖 Discord bot logged in as ${client.user.tag}`);
 });
+client.once("clientReady", () => {
+  console.log(`🤖 Discord bot logged in as ${client.user.tag}`);
+});
+
 
 // Handle Approve/Deny button clicks
 client.on("interactionCreate", async (i) => {
