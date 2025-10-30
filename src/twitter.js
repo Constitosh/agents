@@ -17,7 +17,8 @@ export function getClient(cabal) {
 // --- Search tweets via hashtags ---
 export async function searchTweets(client, query) {
   try {
-    const res = await client.v2.search(query, {
+    const q = `${query} -is:retweet`;
+    const res = await client.v2.search(q, {
       max_results: 10,
       "tweet.fields": "author_id,text,created_at,public_metrics",
       expansions: "author_id"
@@ -25,40 +26,55 @@ export async function searchTweets(client, query) {
 
     const tweets = res.data || [];
     if (!tweets.length) {
-      console.log(`No tweets found for query: ${query}`);
+      console.log(`No tweets found for query: ${q}`);
       return [];
     }
-
-    console.log(`Found ${tweets.length} tweets for query: ${query}`);
+    console.log(`Found ${tweets.length} tweets for query: ${q}`);
     return tweets;
   } catch (err) {
+    if (err?.code === 429) {
+      console.error("❌ searchTweets rate-limited (429) — skipping this slot.");
+      return [];
+    }
     console.error("❌ searchTweets error:", err.message);
     return [];
   }
 }
 
+
 // --- Fetch recent tweets from accounts the agent follows ---
 export async function getFollowingTweets(client, limit = 10) {
-  try {
+   try {
     const me = await client.v2.me();
-    const following = await client.v2.following(me.data.id, { max_results: 10 });
+    const following = await client.v2.following(me.data.id, { max_results: 20 });
     const tweets = [];
 
     for (const user of following.data || []) {
       try {
-        const userTweets = await client.v2.userTimeline(user.id, { max_results: 3 });
-        if (userTweets.data) tweets.push(...userTweets.data);
-      } catch {}
+        const tl = await client.v2.userTimeline(user.id, {
+          max_results: 5,
+          exclude: "retweets"
+        });
+        if (tl?.data?.length) tweets.push(...tl.data);
+      } catch (e) {
+        // skip any single-user error
+      }
+      if (tweets.length >= limit) break;
     }
 
     if (!tweets.length) console.log("No following tweets found.");
     else console.log(`Fetched ${tweets.length} tweets from followings.`);
     return tweets.slice(0, limit);
   } catch (err) {
+    if (err?.code === 429) {
+      console.error("❌ getFollowingTweets rate-limited (429) — skipping this slot.");
+      return [];
+    }
     console.error("❌ getFollowingTweets error:", err.message);
     return [];
   }
 }
+
 
 // --- Post a reply to a tweet ---
 export async function replyToTweet(client, tweetId, text) {
