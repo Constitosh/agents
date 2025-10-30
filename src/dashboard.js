@@ -92,6 +92,44 @@ app.post("/deny/:id", (req, res) => {
   res.redirect("/pending");
 });
 
+// =============== MANUAL REPLY COMPOSER ===============
+app.get("/manual", (req, res) => {
+  if (!authed) return res.redirect("/login");
+  const agents = fs.readdirSync("./agents").map(f => f.replace("_agent_profile.json", ""));
+  res.render("manual", { agents });
+});
+
+app.post("/manual", async (req, res) => {
+  if (!authed) return res.redirect("/login");
+  const { tweetUrl, cabal } = req.body;
+
+  // 🧩 extract tweet ID from URL
+  const match = tweetUrl.match(/status\/(\d+)/);
+  if (!match) return res.send("Invalid tweet URL");
+  const tweetId = match[1];
+
+  const agent = JSON.parse(fs.readFileSync(`./agents/${cabal}_agent_profile.json`));
+  const sharedLibrary = JSON.parse(fs.readFileSync("./shared/library.json"));
+
+  const { generateReply } = await import("./openai.js");
+  const reply = await generateReply(agent, `Tweet link: ${tweetUrl}`, sharedLibrary);
+
+  const pending = JSON.parse(fs.readFileSync("./pending.json"));
+  pending.push({
+    id: Date.now(),
+    agent: cabal,
+    tweetId,
+    tweetUrl,
+    tweetText: "MANUAL REPLY REQUEST",
+    reply
+  });
+  fs.writeFileSync("./pending.json", JSON.stringify(pending, null, 2));
+
+  console.log(`📝 Manual reply for ${cabal} queued for ${tweetUrl}`);
+  res.redirect("/pending");
+});
+
+
 // =============== SETTINGS PAGE ===============
 app.get("/settings", (req, res) => {
   if (!authed) return res.redirect("/login");
