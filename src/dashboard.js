@@ -36,6 +36,14 @@ app.get("/pending", (req, res) => {
   res.render("pending", { pending });
 });
 
+// =============== PENDING QUEUE ===============
+app.get("/pending", (req, res) => {
+  if (!authed) return res.redirect("/login");
+  const pending = JSON.parse(fs.readFileSync("./pending.json"));
+  res.render("pending", { pending });
+});
+
+// ✅ UPDATED APPROVAL ROUTE (reply or original)
 app.post("/approve/:id", async (req, res) => {
   const id = Number(req.params.id);
   const pending = JSON.parse(fs.readFileSync("./pending.json"));
@@ -44,12 +52,35 @@ app.post("/approve/:id", async (req, res) => {
 
   const agent = JSON.parse(fs.readFileSync(`./agents/${item.agent}_agent_profile.json`));
   const client = getClient(agent.cabal);
-  await replyToTweet(client, item.tweetId, item.reply);
 
+  try {
+    if (item.tweetId && item.tweetId !== "ORIGINAL") {
+      // 🗨️ Reply to an existing tweet
+      await replyToTweet(client, item.tweetId, item.reply);
+      console.log(`✅ ${agent.cabal} replied to tweet ${item.tweetId}`);
+    } else {
+      // 🧠 Post an original tweet
+      const { postTweet } = await import("./twitter.js");
+      await postTweet(client, item.reply);
+      console.log(`✅ ${agent.cabal} posted an original tweet`);
+    }
+  } catch (e) {
+    console.error("Approval post error:", e.message);
+  }
+
+  // Move from pending → posted history
   const posted = JSON.parse(fs.readFileSync("./posted.json"));
-  posted.push(item);
-
+  posted.push({ ...item, approvedAt: Date.now() });
   fs.writeFileSync("./posted.json", JSON.stringify(posted, null, 2));
+  fs.writeFileSync("./pending.json", JSON.stringify(pending.filter((p) => p.id !== id), null, 2));
+
+  res.redirect("/pending");
+});
+
+// =============== DENY PENDING ===============
+app.post("/deny/:id", (req, res) => {
+  const id = Number(req.params.id);
+  const pending = JSON.parse(fs.readFileSync("./pending.json"));
   fs.writeFileSync("./pending.json", JSON.stringify(pending.filter((p) => p.id !== id), null, 2));
   res.redirect("/pending");
 });
