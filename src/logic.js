@@ -74,6 +74,7 @@ export async function runAgent(agent, sharedLibrary) {
   const reply = await generateReply(agent, target.text || "", sharedLibrary);
   if (!reply) return;
 
+  // ✅ ensure valid tweetId & tweetUrl
   const pending = JSON.parse(fs.readFileSync("./pending.json"));
   pending.push({
     id: Date.now(),
@@ -81,7 +82,7 @@ export async function runAgent(agent, sharedLibrary) {
     tweetId: tid || "ORIGINAL",
     tweetUrl: turl,
     tweetText: (target.text || "").slice(0, 280),
-    reply
+    reply,
   });
   fs.writeFileSync("./pending.json", JSON.stringify(pending, null, 2));
 
