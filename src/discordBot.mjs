@@ -1,11 +1,23 @@
-// src/discordBot.js
-import { Client, GatewayIntentBits, REST, Routes, SlashCommandBuilder } from "discord.js";
+// src/discordBot.mjs
 import dotenv from "dotenv";
-import fs from "fs";
-import { generateReply } from "./openai.js";
-import { notifyDiscord } from "./notifyDiscord.js";
-
 dotenv.config();
+
+import {
+  Client,
+  GatewayIntentBits,
+  REST,
+  Routes,
+  SlashCommandBuilder,
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+  Events
+} from "discord.js";
+
+import fs from "fs";
+import { getClient, replyToTweet, postTweet } from "./twitter.js";
+import { generateReply } from "./openai.js";
+
 
 const TOKEN = process.env.DISCORD_BOT_TOKEN;
 if (!TOKEN) {
