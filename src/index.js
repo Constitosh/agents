@@ -2,8 +2,8 @@ import dotenv from "dotenv";
 dotenv.config();
 
 import fs from "fs";
-import { runAgent, autoFollowBack, ensureFollowingTargets } from "./logic.js";
-import { startDashboard } from "./dashboard.js";
+import { runAgent, autoFollowBack, ensureFollowingTargets } from "./logic.mjs";
+import { startDashboard } from "./dashboard.mjs";
 
 // Load all cabal agents
 const agents = fs.readdirSync("./agents").map(a =>
